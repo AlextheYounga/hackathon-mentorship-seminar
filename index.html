@@ -124,9 +124,9 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 #nav { position: absolute; left: 60px; right: 60px; bottom: 44px; z-index: 5; }
 #nav .barrel { display: flex; align-items: stretch; justify-content: space-between; padding: 0 6px; }
 #nav button {
-  padding: 0 10px; white-space: nowrap;
-  font-size: 20px; font-weight: 700; font-stretch: 78%;
-  letter-spacing: .05em; text-transform: uppercase;
+  padding: 0 8px; white-space: nowrap;
+  font-size: 19px; font-weight: 700; font-stretch: 78%;
+  letter-spacing: .04em; text-transform: uppercase;
   color: var(--imprint);
   transition: background-color .25s var(--ease), color .25s var(--ease);
 }
@@ -251,6 +251,30 @@ h1, h2 { font-weight: 800; font-stretch: 84%; line-height: 1.02; letter-spacing:
 .ringlabel { position: absolute; top: 330px; width: 420px; margin-left: -210px; text-align: center; font-size: 60px; font-weight: 800; font-stretch: 82%; line-height: 1.02; }
 #s-three .caption { position: absolute; left: 110px; right: 110px; top: 760px; text-align: center; }
 
+/* annex: what a harness is */
+#s-harness h1 { font-size: 76px; height: 86px; position: relative; }
+#s-harness h1 span { position: absolute; left: 0; top: 0; white-space: nowrap; transition: opacity .5s var(--ease), transform .7s var(--ease); }
+#s-harness h1 span.off { opacity: 0; transform: translateY(-30px); }
+#h-sub { position: absolute; left: 1010px; top: 652px; width: 800px; font-size: 32px; font-weight: 500; line-height: 1.24; }
+#h-b { font-size: 66px; line-height: 86px; }
+#h-sub strong { font-weight: 800; }
+#cutaway { position: absolute; left: 110px; right: 110px; top: 470px; height: 130px; }
+#cutaway .pencil { height: 130px; }
+#cutaway .eraser { width: 90px; } #cutaway .ferrule { width: 80px; } #cutaway .tip { width: 195px; }
+#cutaway .barrel.b { flex: 1.3; }
+#cutaway .core {
+  flex: none; width: 330px;
+  background: linear-gradient(90deg, rgba(0,0,0,.28) 0 6px, transparent 6px calc(100% - 6px), rgba(0,0,0,.28) calc(100% - 6px)),
+              linear-gradient(180deg, var(--cedar) 0 39%, #2b2a28 39% 61%, var(--cedar-lo) 61%);
+}
+.part { position: absolute; width: 410px; padding-left: 24px; }
+.part::before { content: ""; position: absolute; left: 0; width: 5px; background: var(--ink); }
+.part.up { bottom: 490px; } .part.up::before { top: 0; bottom: var(--reach, -30px); }
+.part.down { top: 650px; } .part.down::before { bottom: 0; top: -50px; }
+.part.r { padding-left: 0; padding-right: 24px; text-align: right; } .part.r::before { left: auto; right: 0; }
+.part b { display: block; font-size: 46px; font-weight: 900; font-stretch: 74%; text-transform: uppercase; letter-spacing: .02em; line-height: 1; }
+.part span { display: block; margin-top: 10px; font-size: 31px; font-weight: 500; line-height: 1.18; }
+
 /* close */
 #s-close h1 { font-size: 70px; max-width: 1500px; }
 #table { margin-top: 44px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 90px; row-gap: 22px; }
@@ -372,6 +396,16 @@ h1, h2 { font-weight: 800; font-stretch: 84%; line-height: 1.02; letter-spacing:
     </div>
   </section>
 
+  <section class="screen" id="s-harness" data-label="Harness">
+    <h1><span id="h-a">What exactly is a harness?</span><span id="h-b" class="off">The model is the lead. The harness is the rest of the pencil.</span></h1>
+    <p id="h-sub" data-step="5">A harness is the program around the model. It gives the model tools, context and checks, and keeps it working in a loop until the job is done. <strong>Claude Code, Codex and Cursor are harnesses.</strong> Same model, better harness, better work.</p>
+    <div id="cutaway"><div class="pencil flip"><i class="eraser"></i><i class="ferrule"></i><div class="barrel"></div><div class="core"></div><div class="barrel b"></div><i class="tip"></i></div></div>
+    <p class="part up" data-step="1" style="left:900px;--reach:-96px"><b>The lead is the model</b><span>All it does is produce text.</span></p>
+    <p class="part down" data-step="2" style="left:520px"><b>The wood is tools</b><span>They let the model read files, run code and search the web.</span></p>
+    <p class="part up r" data-step="3" style="left:1330px"><b>The point is context</b><span>What the model can see right now: your files, your instructions, its notes.</span></p>
+    <p class="part down" data-step="4" style="left:128px"><b>The eraser is checks</b><span>Tests, permissions and undo.</span></p>
+  </section>
+
   <div class="tool" id="writer" aria-hidden="true"><div class="pencil"><i class="tip"></i><div class="barrel"></div><i class="ferrule"></i><i class="eraser"></i></div></div>
   <div class="tool" id="rubber" aria-hidden="true"><div class="pencil flip"><i class="eraser"></i><i class="ferrule"></i><div class="barrel"></div><i class="tip"></i></div></div>
   <div id="grain" aria-hidden="true"></div>
@@ -395,7 +429,7 @@ h1, h2 { font-weight: 800; font-stretch: 84%; line-height: 1.02; letter-spacing:
   addEventListener('resize', fit); fit();
 
   // Screens in talk order. Index 0 is home; keys 1 to 9 map to the rest.
-  const order = ['home', 'hype', 'roadblocks', 'reverse', 'decisions', 'model', 'who', 'sdp', 'three', 'close'];
+  const order = ['home', 'hype', 'roadblocks', 'reverse', 'decisions', 'model', 'who', 'sdp', 'three', 'close', 'harness'];
   const screens = order.map(id => document.getElementById('s-' + id));
   const steps = screens.map(s => Math.max(0, ...[...s.querySelectorAll('[data-step]')].map(e => +e.dataset.step)));
   steps[order.indexOf('model')] = 2;
@@ -408,7 +442,7 @@ h1, h2 { font-weight: 800; font-stretch: 84%; line-height: 1.02; letter-spacing:
   const navBtns = screens.map((s, i) => {
     const b = document.createElement('button');
     b.type = 'button';
-    b.innerHTML = `<b>${i}</b>${s.dataset.label}`;
+    b.innerHTML = `<b>${i < 10 ? i : 'A'}</b>${s.dataset.label}`;
     b.addEventListener('click', e => { e.stopPropagation(); go(i); });
     return b;
   });
@@ -500,6 +534,7 @@ h1, h2 { font-weight: 800; font-stretch: 84%; line-height: 1.02; letter-spacing:
     else if (k === 'ArrowRight' || k === ' ' || k === 'Enter' || k === 'PageDown') { e.preventDefault(); advance(); }
     else if (k === 'ArrowLeft' || k === 'Backspace' || k === 'PageUp') { e.preventDefault(); back(); }
     else if (k === 'Escape' || k === 'h' || k === 'H') go(0);
+    else if (k === 'a' || k === 'A') go(order.indexOf('harness'));
     else if (k === 'd' || k === 'D') setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
     else if (k === 'f' || k === 'F') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
   });
@@ -559,6 +594,10 @@ h1, h2 { font-weight: 800; font-stretch: 84%; line-height: 1.02; letter-spacing:
     },
     three(n) { screens[cur].querySelectorAll('#rings path').forEach(p => p.classList.toggle('on', +p.dataset.ring <= n)); },
     home() { line1.style.clipPath = ''; startHome(); },
+    harness(n) {
+      document.getElementById('h-a').classList.toggle('off', n >= 5);
+      document.getElementById('h-b').classList.toggle('off', n < 5);
+    },
     roadblocks: writeStory, decisions: writeStory, who: writeStory,
   };
 
