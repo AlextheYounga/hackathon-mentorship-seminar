@@ -72,17 +72,12 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .screen.current { visibility: visible; z-index: 1; }
 .screen.leaving { visibility: visible; z-index: 2; }
-#wipe {
-  position: absolute; top: 0; bottom: 150px; left: 0; width: 150px;
-  background: linear-gradient(90deg, var(--pink-lo) 0 12%, var(--pink) 12% 78%, #f6a79d 78%);
-  z-index: 3; visibility: hidden;
-}
-
 /* a pencil that writes and one that rubs out; each is placed by its working end */
 .tool { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 6; opacity: 0; pointer-events: none; transition: opacity .16s; will-change: transform; }
 .tool .pencil { position: absolute; left: 0; top: -36px; width: 780px; height: 72px; }
 .tool .tip { width: 108px; }
 .crumb { position: absolute; z-index: 6; width: 11px; height: 6px; border-radius: 3px; background: var(--pink-lo); pointer-events: none; }
+.shaving { position: absolute; z-index: 6; width: 34px; height: 20px; border-radius: 60% 60% 8px 8px; background: linear-gradient(180deg, var(--b-mid) 0 22%, #e9c595 22% 60%, var(--cedar) 60%); pointer-events: none; }
 #grain {
   position: absolute; inset: 0; z-index: 7; pointer-events: none; opacity: .22; mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1 .66'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -173,6 +168,15 @@ h1, h2 { font-weight: 800; font-stretch: 84%; line-height: 1.02; letter-spacing:
   background: var(--ink); color: var(--field);
   font-size: 58px; font-weight: 800; font-stretch: 84%; line-height: 1.08; max-width: 1640px;
   text-wrap: balance;
+}
+
+.prompt .story, .prompt .point { transform: none; transition: none; }
+.prompt .story .ln { display: block; width: fit-content; }
+.prompt .point.on { animation: stamp .46s cubic-bezier(.3, 0, .2, 1) both; }
+@keyframes stamp {
+  from { opacity: 0; transform: scale(1.7) rotate(-3deg); }
+  55% { opacity: 1; transform: scale(.96) rotate(.5deg); }
+  to { opacity: 1; transform: none; }
 }
 
 /* hype: the setup */
@@ -368,7 +372,6 @@ h1, h2 { font-weight: 800; font-stretch: 84%; line-height: 1.02; letter-spacing:
     </div>
   </section>
 
-  <div id="wipe"></div>
   <div class="tool" id="writer" aria-hidden="true"><div class="pencil"><i class="tip"></i><div class="barrel"></div><i class="ferrule"></i><i class="eraser"></i></div></div>
   <div class="tool" id="rubber" aria-hidden="true"><div class="pencil flip"><i class="eraser"></i><i class="ferrule"></i><div class="barrel"></div><i class="tip"></i></div></div>
   <div id="grain" aria-hidden="true"></div>
@@ -418,13 +421,14 @@ h1, h2 { font-weight: 800; font-stretch: 84%; line-height: 1.02; letter-spacing:
   // The two pencils. A sweep carries one across an element, left to right, writing it in or rubbing it out.
   const writer = document.getElementById('writer'), rubber = document.getElementById('rubber');
   let epoch = 0;
-  function crumb(x, y) {
+  function fleck(x, y, cls = 'crumb') {
     const c = document.createElement('i');
-    c.className = 'crumb'; c.style.left = x + 'px'; c.style.top = y + 'px'; stage.append(c);
+    c.className = cls; c.style.left = x + 'px'; c.style.top = y + 'px'; stage.append(c);
     const dx = (Math.random() - .5) * 140, dy = 120 + Math.random() * 240;
-    c.animate([{ transform: 'none', opacity: 1 }, { transform: `translate(${dx}px, ${dy}px) rotate(${dx * 5}deg)`, opacity: 0 }],
+    c.animate([{ transform: `rotate(${dx}deg)`, opacity: 1 }, { opacity: 1, offset: .6 }, { transform: `translate(${dx}px, ${dy}px) rotate(${dx * 5}deg)`, opacity: 0 }],
       { duration: 650 + Math.random() * 500, easing: 'cubic-bezier(.3, 0, .8, .6)' }).onfinish = () => c.remove();
   }
+  const inStage = r => { const sr = stage.getBoundingClientRect(); return { x: (r.left - sr.left) / scale, y: (r.top - sr.top) / scale, w: r.width / scale, h: r.height / scale }; };
   function sweep(tool, el, o = {}) {
     const done = o.erase ? 'inset(0 0 0 100%)' : '', clip = o.clip !== false;
     return new Promise(res => {
@@ -440,7 +444,7 @@ h1, h2 { font-weight: 800; font-stretch: 84%; line-height: 1.02; letter-spacing:
         if (clip) el.style.clipPath = o.erase ? `inset(-30% -5% -30% ${X}px)` : `inset(-30% ${w - X}px -30% -5%)`;
         tool.style.opacity = 1;
         tool.style.transform = `translate(${x0 + X}px, ${y}px) rotate(${-58 + 5 * wig}deg)`;
-        if (o.erase && t - last > 40) { last = t; crumb(x0 + X, y); }
+        if (o.erase && t - last > 40) { last = t; fleck(x0 + X, y); }
         if (p < 1) return requestAnimationFrame(frame);
         tool.style.opacity = 0; if (clip) el.style.clipPath = done; res(true);
       })(t0);
@@ -467,20 +471,21 @@ h1, h2 { font-weight: 800; font-stretch: 84%; line-height: 1.02; letter-spacing:
     if (!old) return;
     old.classList.remove('current');
     if (reduced) return;
-    // Rub the old screen out, left to right, with the new one already underneath.
+    // The eraser scrubs the old screen away, left to right, with the new one already underneath.
     busy = true;
     old.classList.add('leaving');
-    const wipe = document.getElementById('wipe');
-    wipe.style.visibility = 'visible';
-    const t0 = performance.now(), dur = 520;
+    const t0 = performance.now(), dur = 640;
+    let last = 0;
     (function frame(t) {
-      const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
-      const x = e * (1920 + 150) - 150;
-      wipe.style.transform = `translateX(${x}px)`;
-      old.style.clipPath = `inset(0 0 0 ${Math.max(0, x + 75)}px)`;
+      const p = Math.min(1, Math.max(0, (t - t0) / dur)), e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      const x = e * (1920 + 420) - 210, wig = Math.sin(p * Math.PI * 5), y = 465 + 340 * wig;
+      old.style.maskImage = old.style.webkitMaskImage = `linear-gradient(90deg, transparent ${x - 90}px, #000 ${x + 90}px)`;
+      rubber.style.opacity = 1;
+      rubber.style.transform = `translate(${x}px, ${y}px) rotate(${-58 + 9 * wig}deg) scale(1.7)`;
+      if (t - last > 28) { last = t; fleck(x, y); }
       if (p < 1) return requestAnimationFrame(frame);
-      old.classList.remove('leaving'); old.style.clipPath = '';
-      wipe.style.visibility = 'hidden'; busy = false;
+      old.classList.remove('leaving'); old.style.maskImage = old.style.webkitMaskImage = '';
+      rubber.style.opacity = 0; busy = false;
     })(t0);
   }
 
@@ -504,8 +509,36 @@ h1, h2 { font-weight: 800; font-stretch: 84%; line-height: 1.02; letter-spacing:
   try { if (localStorage.getItem('theme') === 'dark') setTheme('dark'); } catch {}
 
   // ---------- per-screen behaviour ----------
+  // Question screens: the pencil writes the Learn Arena line, one line of text at a time.
+  function splitLines(el) {
+    const words = [];
+    el.childNodes.forEach(n => n.textContent.trim().split(/\s+/).forEach(w => words.push({ w, bold: n.nodeName === 'STRONG' })));
+    el.innerHTML = words.map(o => `<span>${o.bold ? '<strong>' + o.w + '</strong>' : o.w}</span>`).join(' ');
+    const lines = [];
+    [...el.children].forEach(sp => { const l = lines.at(-1); l && l.top === sp.offsetTop ? l.html.push(sp.innerHTML) : lines.push({ top: sp.offsetTop, html: [sp.innerHTML] }); });
+    el.innerHTML = lines.map(l => `<span class="ln">${l.html.join(' ')}</span>`).join('');
+  }
+  async function writeStory(n, prev) {
+    const lines = [...screens[cur].querySelectorAll('.story .ln')];
+    lines.forEach(l => { l.style.clipPath = ''; });
+    if (reduced || n !== 1 || prev !== 0) return;
+    lines.forEach(l => { l.style.clipPath = 'inset(0 100% 0 0)'; });
+    for (const l of lines) if (!await sweep(writer, l, { dur: 320 + l.offsetWidth * .5, waves: Math.round(l.offsetWidth / 55), amp: .3, mid: .55 })) return;
+  }
+
   const hooks = {
-    sdp(n) { screens[cur].dataset.at = n; },
+    sdp(n, prev) {
+      screens[cur].dataset.at = n;
+      if (reduced || prev !== n - 1 || (n !== 1 && n !== 2)) return;
+      // Shavings fall from the point while the pencil is being sharpened down.
+      const tip = document.querySelector(n === 1 ? '#p-do .tip' : '#p-pay .tip'), ep = epoch, t0 = performance.now();
+      (function shed(t) {
+        if (ep !== epoch || t - t0 > 1350) return;
+        const r = inStage(tip.getBoundingClientRect());
+        fleck(r.x + r.w * .3, r.y + r.h * (.2 + Math.random() * .6), 'shaving');
+        setTimeout(() => requestAnimationFrame(shed), 55);
+      })(t0);
+    },
     model(n, prev) {
       const s = screens[cur];
       document.getElementById('m-a').classList.toggle('off', n > 0);
@@ -526,6 +559,7 @@ h1, h2 { font-weight: 800; font-stretch: 84%; line-height: 1.02; letter-spacing:
     },
     three(n) { screens[cur].querySelectorAll('#rings path').forEach(p => p.classList.toggle('on', +p.dataset.ring <= n)); },
     home() { line1.style.clipPath = ''; startHome(); },
+    roadblocks: writeStory, decisions: writeStory, who: writeStory,
   };
 
   // Home: the first line keeps getting rubbed out and rewritten in a new cut of the typeface. The second never moves.
@@ -595,6 +629,7 @@ h1, h2 { font-weight: 800; font-stretch: 84%; line-height: 1.02; letter-spacing:
 
   document.fonts.ready.then(() => {
     fitLine2(); setCut(0);
+    document.querySelectorAll('.prompt .story').forEach(splitLines);
     addTag('Cutting scope', 420, 400);
     addTag('Coupling and bad abstractions', 1400, 760);
     const start = order.indexOf(location.hash.slice(1));
